@@ -1,0 +1,15 @@
+{
+  "name": "The Name Oracle",
+  "short_name": "Name Oracle",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#0f172a",
+  "theme_color": "#7c3aed",
+  "icons": [
+    {
+      "src": "https://cdn-icons-png.flaticon.com/512/3504/3504246.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

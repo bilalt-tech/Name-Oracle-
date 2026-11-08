@@ -1,0 +1,1203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Name Oracle</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+    <!-- Canvas Confetti -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Plus Jakarta Sans', 'sans-serif'],
+                        display: ['Space Grotesk', 'sans-serif'],
+                    },
+                    animation: {
+                        'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                        'float': 'float 6s ease-in-out infinite',
+                        'scale-up': 'scaleUp 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) forwards',
+                    },
+                    keyframes: {
+                        float: {
+                            '0%, 100%': { transform: 'translateY(0px)' },
+                            '50%': { transform: 'translateY(-10px)' },
+                        },
+                        scaleUp: {
+                            '0%': { transform: 'scale(0.9)', opacity: '0' },
+                            '100%': { transform: 'scale(1)', opacity: '1' }
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            background: radial-gradient(circle at top right, #1e1b4b, #0f172a);
+            min-height: 100vh;
+        }
+        .glass-panel {
+            background: rgba(30, 41, 59, 0.7);
+            backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .glass-card {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .glass-card:hover {
+            background: rgba(255, 255, 255, 0.07);
+            border-color: rgba(255, 255, 255, 0.15);
+            transform: translateY(-2px);
+        }
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.02);
+        }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 9999px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+    </style>
+
+    <link rel="manifest" href="manifest.json">
+
+    <script>
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('./sw.js')
+            .then(reg => console.log('Service Worker registered!'))
+            .catch(err => console.log('Service Worker failed: ', err));
+        });
+      }
+    </script>
+</head>
+<body class="text-slate-100 font-sans selection:bg-violet-500/30 overflow-x-hidden pb-12">
+
+    <!-- Top Glow Effect -->
+    <div class="absolute top-0 left-1/2 -translate-x-1/2 w-[500px] h-[500px] bg-gradient-to-br from-violet-600/20 to-fuchsia-600/20 blur-[100px] rounded-full pointer-events-none -z-10"></div>
+
+    <!-- Main Container -->
+    <div class="max-w-6xl mx-auto px-4 pt-8">
+        
+        <!-- Header -->
+        <header class="flex flex-col md:flex-row justify-between items-center mb-8 gap-4 pb-6 border-b border-slate-800/60">
+            <div class="flex items-center gap-3">
+                <div class="w-12 h-12 rounded-2xl bg-gradient-to-tr from-violet-600 to-fuchsia-600 flex items-center justify-center shadow-lg shadow-violet-500/20 animate-pulse-slow">
+                    <i class="fa-solid fa-volume-high text-xl text-white"></i>
+                </div>
+                <div>
+                    <h1 class="text-2xl font-display font-bold bg-gradient-to-r from-white via-slate-200 to-slate-400 bg-clip-text text-transparent">
+                        The Name Oracle
+                    </h1>
+                    <p class="text-xs text-slate-400">Random selector &amp; announcer tool with chance modifiers</p>
+                </div>
+            </div>
+            
+            <div class="flex gap-2 text-sm bg-slate-900/60 p-1.5 rounded-xl border border-slate-800/80">
+                <button onclick="switchTab('picker')" id="tab-picker" class="tab-btn px-4 py-2 rounded-lg font-medium transition-all duration-200 bg-violet-600 text-white shadow-sm shadow-violet-500/10">
+                    <i class="fa-solid fa-wand-magic-sparkles mr-2"></i>Selector
+                </button>
+                <button onclick="switchTab('wheel')" id="tab-wheel" class="tab-btn px-4 py-2 rounded-lg font-medium text-slate-400 hover:text-white transition-all duration-200">
+                    <i class="fa-solid fa-circle-notch mr-2"></i>Spin Wheel
+                </button>
+                <button onclick="switchTab('settings')" id="tab-settings" class="tab-btn px-4 py-2 rounded-lg font-medium text-slate-400 hover:text-white transition-all duration-200">
+                    <i class="fa-solid fa-sliders mr-2"></i>Voice Config
+                </button>
+            </div>
+        </header>
+
+        <!-- Main Workspace Grid -->
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+            
+            <!-- Left Panel: Interactive Zone (Picker / Wheel / Settings) -->
+            <div class="lg:col-span-8 space-y-6">
+                
+                <!-- TAB 1: RANDOM PICKER CARD -->
+                <div id="panel-picker" class="glass-panel p-6 rounded-3xl relative overflow-hidden shadow-2xl">
+                    <!-- Subtle background graphic pattern -->
+                    <div class="absolute inset-0 opacity-[0.02] bg-[radial-gradient(#fff_1px,transparent_1px)] [background-size:16px_16px] pointer-events-none"></div>
+                    
+                    <div class="flex justify-between items-center mb-6">
+                        <span class="text-xs font-semibold tracking-widest text-violet-400 uppercase">Interactive Speaker</span>
+                        <div class="flex gap-2">
+                            <button onclick="toggleSoundEffect()" id="sfx-toggle" class="w-8 h-8 rounded-lg bg-slate-800 hover:bg-slate-700 flex items-center justify-center text-xs transition" title="Toggle all sounds">
+                                <i class="fa-solid fa-volume-high text-emerald-400"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Main Display Stage -->
+                    <div class="h-64 flex flex-col justify-center items-center relative rounded-2xl border border-slate-800/80 bg-slate-950/40 overflow-hidden mb-6">
+                        <!-- Floating graphic ring -->
+                        <div class="absolute w-48 h-48 border border-dashed border-slate-800 rounded-full animate-[spin_40s_linear_infinite] pointer-events-none"></div>
+                        
+                        <div class="z-10 text-center px-4">
+                            <p id="placeholder-text" class="text-slate-500 text-sm uppercase tracking-widest mb-2 font-medium">Ready to Summon</p>
+                            <h2 id="display-name" class="text-5xl md:text-6xl font-display font-extrabold text-white tracking-tight drop-shadow-md py-2 truncate max-w-lg transition-transform duration-100 scale-100">
+                                Press Start
+                            </h2>
+                            <p id="picked-count-tag" class="text-xs text-violet-400/80 mt-2 font-medium opacity-0 transition-opacity">Summoned 0 times</p>
+                        </div>
+
+                        <!-- Sparkles and background accents -->
+                        <div class="absolute bottom-2 right-2 text-[10px] text-slate-600 flex items-center gap-1.5 bg-slate-900/40 py-1 px-2.5 rounded-md border border-slate-800/50">
+                            <i class="fa-solid fa-circle-info text-violet-400"></i> Local Synthesizer Active
+                        </div>
+                    </div>
+
+                    <!-- Actions -->
+                    <div class="flex flex-col sm:flex-row gap-3">
+                        <button onclick="startDraw()" id="draw-btn" class="flex-1 py-4 px-6 rounded-2xl bg-gradient-to-r from-violet-600 to-fuchsia-600 hover:from-violet-500 hover:to-fuchsia-500 text-white font-semibold font-display tracking-wide text-lg shadow-lg shadow-violet-600/20 active:scale-98 transition-all flex items-center justify-center gap-3 group">
+                            <i class="fa-solid fa-bolt group-hover:scale-110 transition-transform"></i>
+                            <span>Summon &amp; Say Random Name</span>
+                        </button>
+                        
+                        <button onclick="repeatPronunciation()" id="repeat-btn" disabled class="sm:px-6 py-4 px-4 rounded-2xl bg-slate-800 hover:bg-slate-700 text-slate-300 disabled:opacity-40 disabled:hover:bg-slate-800 disabled:cursor-not-allowed font-medium transition flex items-center justify-center gap-2" title="Repeat Pronunciation">
+                            <i class="fa-solid fa-volume-high"></i>
+                            <span class="sm:hidden lg:inline">Say Again</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- TAB 2: SPIN WHEEL CARD (Hidden by default) -->
+                <div id="panel-wheel" class="glass-panel p-6 rounded-3xl shadow-2xl hidden">
+                    <span class="text-xs font-semibold tracking-widest text-pink-400 uppercase block mb-4">The Wheel of Destiny</span>
+                    
+                    <div class="flex flex-col md:flex-row gap-6 items-center">
+                        <div class="relative w-64 h-64 md:w-80 md:h-80 flex-shrink-0">
+                            <!-- Wheel Pointer arrow -->
+                            <div class="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-2 w-0 h-0 border-l-[12px] border-l-transparent border-r-[12px] border-r-transparent border-t-[20px] border-t-pink-500 z-20 filter drop-shadow"></div>
+                            <!-- Canvas for Wheel -->
+                            <canvas id="wheel-canvas" width="400" height="400" class="w-full h-full rounded-full border-4 border-slate-800 bg-slate-950/40 shadow-inner cursor-pointer"></canvas>
+                        </div>
+                        
+                        <div class="flex-1 space-y-4 text-center md:text-left">
+                            <h3 class="font-display font-bold text-xl text-white">Weighted Spin Wheel</h3>
+                            <p class="text-sm text-slate-400 leading-relaxed">
+                                Give the wheel a high-speed spin! The sizes of the slices are dynamically proportional to each name's current weight configuration. Drag the sliders in the roster list below to change the slices in real-time.
+                            </p>
+                            
+                            <div class="flex flex-col gap-4">
+                                <button onclick="spinWheel()" id="spin-btn" class="w-full md:w-auto py-3.5 px-8 rounded-xl bg-pink-600 hover:bg-pink-500 text-white font-semibold tracking-wide transition shadow-lg shadow-pink-600/20 flex items-center justify-center gap-2">
+                                    <i class="fa-solid fa-sync animate-spin-slow"></i> Spin the Wheel
+                                </button>
+
+                                <!-- Prominent Winner Display Box -->
+                                <div id="wheel-result-box" class="p-4 rounded-2xl bg-gradient-to-r from-violet-950/80 to-fuchsia-950/80 border border-pink-500/40 flex flex-col items-center justify-center hidden animate-scale-up shadow-md">
+                                    <span class="text-[10px] font-bold tracking-widest text-pink-400 uppercase flex items-center gap-1">
+                                        <i class="fa-solid fa-trophy text-amber-400 animate-bounce"></i> Oracle Chosen Winner
+                                    </span>
+                                    <span id="wheel-winner-name" class="text-3xl md:text-4xl font-display font-extrabold bg-gradient-to-r from-white via-pink-200 to-fuchsia-300 bg-clip-text text-transparent mt-1.5 drop-shadow">---</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- TAB 3: VOICE CONFIGURATION (Hidden by default) -->
+                <div id="panel-settings" class="glass-panel p-6 rounded-3xl shadow-2xl hidden">
+                    <span class="text-xs font-semibold tracking-widest text-emerald-400 uppercase block mb-4">Speech Synthesis Settings</span>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="space-y-4">
+                            <div>
+                                <label class="block text-xs font-medium text-slate-400 uppercase tracking-wider mb-2">Voice Selector</label>
+                                <select id="voice-select" class="w-full bg-slate-950 border border-slate-800 text-slate-200 rounded-xl p-3 focus:outline-none focus:border-violet-500 transition-colors text-sm">
+                                    <!-- Populated dynamically -->
+                                </select>
+                                <span class="text-[11px] text-slate-500 mt-1 block leading-relaxed">
+                                    <i class="fa-solid fa-info-circle text-violet-500"></i> French or English voices offer the best pronunciation for this name combination.
+                                </span>
+                            </div>
+
+                            <div>
+                                <label class="block text-xs font-medium text-slate-400 uppercase tracking-wider mb-2">Speech Rate (Speed)</label>
+                                <div class="flex items-center gap-4">
+                                    <input type="range" id="rate-range" min="0.5" max="2" step="0.1" value="1" class="flex-1 accent-violet-500 bg-slate-850 h-2 rounded-lg">
+                                    <span id="rate-val" class="text-xs font-mono font-bold bg-slate-900 px-2 py-1 rounded border border-slate-800">1.0x</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="space-y-4">
+                            <div>
+                                <label class="block text-xs font-medium text-slate-400 uppercase tracking-wider mb-2">Speech Pitch</label>
+                                <div class="flex items-center gap-4">
+                                    <input type="range" id="pitch-range" min="0.5" max="1.8" step="0.1" value="1" class="flex-1 accent-fuchsia-500 bg-slate-850 h-2 rounded-lg">
+                                    <span id="pitch-val" class="text-xs font-mono font-bold bg-slate-900 px-2 py-1 rounded border border-slate-800">1.0</span>
+                                </div>
+                            </div>
+
+                            <div>
+                                <label class="block text-xs font-medium text-slate-400 uppercase tracking-wider mb-2">Voice Accent Quick-Select</label>
+                                <div class="grid grid-cols-3 gap-2">
+                                    <button onclick="setVoicePreset('fr')" class="py-2.5 px-3 rounded-xl border border-slate-800 hover:border-violet-500 bg-slate-900/60 hover:bg-slate-900 text-xs transition flex items-center justify-center gap-1.5">
+                                        🇨🇵 French
+                                    </button>
+                                    <button onclick="setVoicePreset('en')" class="py-2.5 px-3 rounded-xl border border-slate-800 hover:border-violet-500 bg-slate-900/60 hover:bg-slate-900 text-xs transition flex items-center justify-center gap-1.5">
+                                        🇬🇧 British
+                                    </button>
+                                    <button onclick="setVoicePreset('us')" class="py-2.5 px-3 rounded-xl border border-slate-800 hover:border-violet-500 bg-slate-900/60 hover:bg-slate-900 text-xs transition flex items-center justify-center gap-1.5">
+                                        🇺🇸 American
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mt-6 pt-5 border-t border-slate-800/80 flex justify-between items-center">
+                        <span class="text-xs text-slate-500">Test voice current configurations:</span>
+                        <button onclick="testVoiceVoice()" class="py-2 px-4 rounded-lg bg-slate-800 hover:bg-slate-700 text-xs text-white font-semibold transition flex items-center gap-2">
+                            <i class="fa-solid fa-play"></i> Run Audio Test
+                        </button>
+                    </div>
+                </div>
+
+                <!-- SECTION: ACTIVE NAMES GRID (Name Pool with Chance Controls) -->
+                <div class="glass-panel p-6 rounded-3xl shadow-2xl">
+                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-6">
+                        <div>
+                            <span class="text-xs font-semibold tracking-widest text-violet-400 uppercase">Available Name Pool</span>
+                            <h3 class="font-display font-bold text-xl text-white mt-1">Active Roster (<span id="active-count">10</span>/<span id="total-count">10</span>)</h3>
+                        </div>
+                        <div class="flex gap-2 w-full sm:w-auto">
+                            <button onclick="resetAllWeights()" class="flex-1 sm:flex-none py-1.5 px-3 bg-slate-800 hover:bg-slate-700 text-xs font-medium rounded-lg border border-slate-700/55 text-violet-300 transition">
+                                <i class="fa-solid fa-scale-balanced mr-1.5"></i> Reset Weights
+                            </button>
+                            <button onclick="toggleAllNames(true)" class="flex-1 sm:flex-none py-1.5 px-3 bg-slate-800 hover:bg-slate-700 text-xs font-medium rounded-lg border border-slate-700/55 transition">
+                                <i class="fa-solid fa-square-check text-emerald-400 mr-1.5"></i> Select All
+                            </button>
+                            <button onclick="toggleAllNames(false)" class="flex-1 sm:flex-none py-1.5 px-3 bg-slate-800 hover:bg-slate-700 text-xs font-medium rounded-lg border border-slate-700/55 transition">
+                                <i class="fa-solid fa-square text-rose-400 mr-1.5"></i> Clear All
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Filterable Name Grid -->
+                    <div id="names-grid" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
+                        <!-- Populated Dynamically -->
+                    </div>
+                    
+                    <p class="text-xs text-slate-500 mt-4 italic text-center leading-relaxed">
+                        💡 Toggle active state with the left checkbox. Click a name or the pen icon to rename. Use +/- buttons to adjust weights!
+                    </p>
+                </div>
+            </div>
+
+            <!-- Right Panel: Sidebar Stats & History -->
+            <div class="lg:col-span-4 space-y-6">
+                
+                <!-- STATS CARD -->
+                <div class="glass-panel p-6 rounded-3xl shadow-2xl">
+                    <span class="text-xs font-semibold tracking-widest text-fuchsia-400 uppercase block mb-4">Live Statistics</span>
+                    
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="bg-slate-950/40 border border-slate-800/80 p-4 rounded-2xl text-center">
+                            <span class="text-xs text-slate-400 block mb-1">Total Draws</span>
+                            <span id="stat-total-draws" class="text-3xl font-display font-extrabold text-white">0</span>
+                        </div>
+                        <div class="bg-slate-950/40 border border-slate-800/80 p-4 rounded-2xl text-center">
+                            <span class="text-xs text-slate-400 block mb-1">Unique Picked</span>
+                            <span id="stat-unique-draws" class="text-3xl font-display font-extrabold text-white">0/10</span>
+                        </div>
+                    </div>
+
+                    <!-- Lead / Hot names list -->
+                    <div class="mt-5 space-y-3">
+                        <h4 class="text-xs font-semibold uppercase tracking-wider text-slate-400">Most Summoned</h4>
+                        <div id="leaderboard-list" class="space-y-2">
+                            <p class="text-xs text-slate-500 italic py-2">No draws completed yet.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- RECENT DRAWS HISTORY -->
+                <div class="glass-panel p-6 rounded-3xl shadow-2xl">
+                    <div class="flex justify-between items-center mb-4">
+                        <span class="text-xs font-semibold tracking-widest text-sky-400 uppercase">Chronicle of Draws</span>
+                        <button onclick="clearHistory()" class="text-xs text-slate-500 hover:text-slate-300 transition flex items-center gap-1.5">
+                            <i class="fa-solid fa-trash-can"></i> Clear
+                        </button>
+                    </div>
+
+                    <!-- Scrollable list of drew names -->
+                    <div id="history-container" class="max-h-64 overflow-y-auto space-y-2.5 pr-2">
+                        <!-- Mock or dynamic draws -->
+                        <div id="no-history-fallback" class="text-center py-8 text-slate-500 text-xs">
+                            <i class="fa-solid fa-clock-rotate-left text-lg mb-2 block text-slate-600"></i>
+                            Waiting for the first summon...
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ADD QUICK ADD TO POOL -->
+                <div class="glass-panel p-6 rounded-3xl shadow-2xl">
+                    <span class="text-xs font-semibold tracking-widest text-slate-400 uppercase block mb-3">Expand Roster</span>
+                    <form onsubmit="addNewName(event)" class="flex gap-2">
+                        <input type="text" id="new-name-input" placeholder="Type a new name..." maxlength="20" class="flex-1 bg-slate-950 border border-slate-800 text-slate-200 text-sm rounded-xl px-4 py-2.5 focus:outline-none focus:border-violet-500 transition-colors">
+                        <button type="submit" class="p-3.5 bg-violet-600 hover:bg-violet-500 rounded-xl text-white text-xs font-bold transition flex items-center justify-center">
+                            <i class="fa-solid fa-plus"></i>
+                        </button>
+                    </form>
+                </div>
+                
+            </div>
+            
+        </div>
+    </div>
+
+    <!-- Audio synth configuration script -->
+    <script>
+        // Init state & static lists
+        const INITIAL_NAMES = [
+            "1", 
+            "2", 
+            "3", 
+            "4", 
+            "5", 
+            "6", 
+            "7", 
+            "8", 
+            "9", 
+            "10"
+        ];
+
+        let namePool = []; // Array of { name: string, active: boolean, count: number, weight: number }
+        let history = [];
+        let synth = window.speechSynthesis;
+        let voicesList = [];
+        let isDrawing = false;
+        let isSpinning = false;
+        let currentDrawCount = 0;
+        let playSfx = true;
+
+        // Initialize Name Pool from custom set or cached data
+        function initApp() {
+            // Load names from array with default weight = 1.0
+            namePool = INITIAL_NAMES.map(name => ({
+                name: name,
+                active: true,
+                count: 0,
+                weight: 1.0
+            }));
+            
+            loadVoices();
+            if (synth.onvoiceschanged !== undefined) {
+                synth.onvoiceschanged = loadVoices;
+            }
+
+            // Sync HTML Renders
+            renderNameGrid();
+            updateStats();
+            initWheel();
+        }
+
+        // TEXT TO SPEECH CONTROLS
+        function loadVoices() {
+            voicesList = synth.getVoices();
+            const voiceSelect = document.getElementById('voice-select');
+            if(!voiceSelect) return;
+            
+            voiceSelect.innerHTML = '';
+            
+            // Filter to English & French accents for optimal presentation
+            const targetLanguages = ['en', 'fr'];
+            const sortedVoices = [...voicesList].sort((a, b) => {
+                const aTarget = targetLanguages.some(l => a.lang.toLowerCase().includes(l));
+                const bTarget = targetLanguages.some(l => b.lang.toLowerCase().includes(l));
+                if (aTarget && !bTarget) return -1;
+                if (!aTarget && bTarget) return 1;
+                return a.name.localeCompare(b.name);
+            });
+
+            sortedVoices.forEach(voice => {
+                const option = document.createElement('option');
+                option.textContent = `${voice.name} (${voice.lang})`;
+                option.value = voice.name;
+                
+                // Set default French voice if available as French name pronunciation matches list
+                if (voice.lang.toLowerCase().startsWith('fr-') && !voiceSelect.value) {
+                    option.selected = true;
+                }
+                voiceSelect.appendChild(option);
+            });
+
+            // If no French fallback, try to select any English
+            if(!voiceSelect.value && sortedVoices.length > 0) {
+                const enVoice = sortedVoices.find(v => v.lang.toLowerCase().startsWith('en-'));
+                if (enVoice) {
+                    voiceSelect.value = enVoice.name;
+                }
+            }
+        }
+
+        // speakName function with parameter to allow explicit actions to bypass general mute state
+        function speakName(name, force = false) {
+            if (!synth) return;
+            // If sound effects are disabled, and it's not a forced manual interaction, do not play sound.
+            if (!playSfx && !force) return;
+            
+            // Cancel any current utterance running
+            synth.cancel();
+
+            const utterance = new SpeechSynthesisUtterance(name);
+            const selectedVoiceName = document.getElementById('voice-select').value;
+            const selectedVoice = voicesList.find(v => v.name === selectedVoiceName);
+            
+            if (selectedVoice) {
+                utterance.voice = selectedVoice;
+            }
+            
+            // Load sliders values
+            utterance.rate = parseFloat(document.getElementById('rate-range').value);
+            utterance.pitch = parseFloat(document.getElementById('pitch-range').value);
+            
+            synth.speak(utterance);
+        }
+
+        function testVoiceVoice() {
+            // Explicit test from settings configuration overrides general draw mute state
+            speakName("The voice is fully customized. Testing, testing!", true);
+        }
+
+        function setVoicePreset(lang) {
+            const voiceSelect = document.getElementById('voice-select');
+            let matchedVoice = null;
+            if (lang === 'fr') {
+                matchedVoice = voicesList.find(v => v.lang.startsWith('fr'));
+            } else if (lang === 'en') {
+                matchedVoice = voicesList.find(v => v.lang.includes('GB') || v.lang.includes('gb') || v.lang.startsWith('en'));
+            } else if (lang === 'us') {
+                matchedVoice = voicesList.find(v => v.lang.includes('US') || v.lang.includes('us'));
+            }
+
+            if (matchedVoice) {
+                voiceSelect.value = matchedVoice.name;
+                // Speak confirmation (forced override to provide feedback)
+                const text = lang === 'fr' ? "Roster activé, voix française choisie." : "Voice accent successfully updated.";
+                speakName(text, true);
+            }
+        }
+
+        // Weighted Selection Logic helper
+        function getWeightedRandom(activePool) {
+            const totalWeight = activePool.reduce((sum, item) => sum + item.weight, 0);
+            if (totalWeight <= 0) return activePool[0];
+            
+            let r = Math.random() * totalWeight;
+            for (let item of activePool) {
+                if (r < item.weight) {
+                    return item;
+                }
+                r -= item.weight;
+            }
+            return activePool[activePool.length - 1];
+        }
+
+        // Toggles & Roster controls
+        function renderNameGrid() {
+            const grid = document.getElementById('names-grid');
+            grid.innerHTML = '';
+            
+            // Calculate total weight to render individual live percentages
+            const activePool = namePool.filter(n => n.active);
+            const totalWeight = activePool.reduce((sum, item) => sum + item.weight, 0);
+
+            namePool.forEach((item, index) => {
+                const activeClasses = item.active 
+                    ? 'border-violet-500/50 bg-violet-600/5 text-white' 
+                    : 'border-slate-800/80 bg-slate-950/20 text-slate-500 opacity-60';
+
+                // Calculate chance percentage
+                const chance = (item.active && totalWeight > 0) 
+                    ? ((item.weight / totalWeight) * 100).toFixed(1) 
+                    : "0.0";
+                
+                const card = document.createElement('div');
+                card.className = `group flex flex-col p-4 rounded-2xl border ${activeClasses} transition-all duration-200`;
+                
+                card.innerHTML = `
+                    <div class="flex justify-between items-center mb-3 gap-2">
+                        <div class="flex items-center gap-2 truncate flex-1 min-w-0">
+                            <input type="checkbox" ${item.active ? 'checked' : ''} class="w-4 h-4 rounded text-violet-600 focus:ring-violet-500/30 bg-slate-950 border-slate-700 cursor-pointer toggle-checkbox shrink-0">
+                            <span class="font-bold text-sm truncate cursor-pointer select-none name-title hover:text-violet-300 transition" title="Click to edit name">${item.name}</span>
+                            <input type="text" value="${item.name}" class="name-edit-input hidden bg-slate-950 border border-violet-500 text-white font-bold text-sm rounded px-2 py-0.5 w-full focus:outline-none">
+                            <button class="edit-name-btn w-6 h-6 rounded-lg bg-slate-900/80 hover:bg-slate-800 text-[10px] text-slate-400 hover:text-violet-300 transition flex items-center justify-center shrink-0" title="Edit name">
+                                <i class="fa-solid fa-pen"></i>
+                            </button>
+                        </div>
+                        <div class="flex items-center gap-1.5 shrink-0">
+                            <span class="text-[10px] font-mono px-2 py-0.5 rounded-full bg-slate-800 border border-slate-700/60 text-emerald-400 font-semibold" title="Probability of being picked">
+                                ${chance}%
+                            </span>
+                            <button class="speak-single-btn w-6 h-6 rounded-lg bg-slate-900 hover:bg-slate-800 text-[10px] text-slate-400 hover:text-white transition flex items-center justify-center" title="Speak name now">
+                                <i class="fa-solid fa-volume-high"></i>
+                            </button>
+                            <button class="delete-name-btn w-6 h-6 rounded-lg bg-slate-900 hover:bg-rose-900/60 text-[10px] text-slate-500 hover:text-rose-400 transition flex items-center justify-center" title="Remove name">
+                                <i class="fa-solid fa-trash-can"></i>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- Weight Customizer Stepper (Slider removed to prevent overflow) -->
+                    <div class="flex items-center justify-between bg-slate-950/40 p-2 rounded-xl border border-slate-900/60 mt-1">
+                        <span class="text-[10px] text-slate-400 font-semibold uppercase tracking-wider">Weight:</span>
+                        <div class="flex items-center gap-1 bg-slate-900/80 rounded-lg p-0.5 border border-slate-800">
+                            <button class="weight-minus w-6 h-6 rounded hover:bg-slate-800 text-xs font-bold text-slate-400 hover:text-white flex items-center justify-center">-</button>
+                            <span class="weight-val text-[11px] font-mono font-extrabold text-violet-400 w-8 text-center">${item.weight.toFixed(1)}</span>
+                            <button class="weight-plus w-6 h-6 rounded hover:bg-slate-800 text-xs font-bold text-slate-400 hover:text-white flex items-center justify-center">+</button>
+                        </div>
+                    </div>
+                `;
+
+                // Event listener to toggle active state
+                card.querySelector('.toggle-checkbox').addEventListener('change', () => {
+                    toggleName(index);
+                });
+
+                // Name editing logic (Inline)
+                const titleSpan = card.querySelector('.name-title');
+                const editInput = card.querySelector('.name-edit-input');
+                const editBtn = card.querySelector('.edit-name-btn');
+
+                const enableEdit = () => {
+                    titleSpan.classList.add('hidden');
+                    editInput.classList.remove('hidden');
+                    editInput.focus();
+                    editInput.select();
+                };
+
+                const saveEdit = () => {
+                    const newName = editInput.value.trim();
+                    if (newName && newName !== item.name) {
+                        item.name = newName;
+                        renderNameGrid();
+                        updateStats();
+                    } else {
+                        editInput.value = item.name;
+                        titleSpan.classList.remove('hidden');
+                        editInput.classList.add('hidden');
+                    }
+                };
+
+                editBtn.addEventListener('click', enableEdit);
+                titleSpan.addEventListener('click', enableEdit);
+
+                editInput.addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter') {
+                        saveEdit();
+                    } else if (e.key === 'Escape') {
+                        editInput.value = item.name;
+                        titleSpan.classList.remove('hidden');
+                        editInput.classList.add('hidden');
+                    }
+                });
+
+                editInput.addEventListener('blur', saveEdit);
+
+                // Delete name logic
+                card.querySelector('.delete-name-btn').addEventListener('click', () => {
+                    deleteName(index);
+                });
+
+                // Single voice play trigger (explicit click - forced)
+                card.querySelector('.speak-single-btn').addEventListener('click', () => {
+                    speakName(item.name, true);
+                });
+
+                const valDisplay = card.querySelector('.weight-val');
+
+                // Plus / Minus Button logic
+                card.querySelector('.weight-plus').addEventListener('click', () => {
+                    let w = parseFloat((item.weight + 0.5).toFixed(1));
+                    if (w > 10.0) w = 10.0;
+                    item.weight = w;
+                    valDisplay.textContent = w.toFixed(1);
+                    recomputeChancesDebounced();
+                });
+
+                // Minus button logic
+                card.querySelector('.weight-minus').addEventListener('click', () => {
+                    let w = parseFloat((item.weight - 0.5).toFixed(1));
+                    if (w < 0.1) w = 0.1;
+                    item.weight = w;
+                    valDisplay.textContent = w.toFixed(1);
+                    recomputeChancesDebounced();
+                });
+
+                grid.appendChild(card);
+            });
+
+            // Update Counts in UI
+            const activeCount = namePool.filter(n => n.active).length;
+            document.getElementById('active-count').textContent = activeCount;
+            document.getElementById('total-count').textContent = namePool.length;
+            
+            // Re-render wheel segments
+            drawWheel();
+        }
+
+        function deleteName(index) {
+            namePool.splice(index, 1);
+            renderNameGrid();
+            updateStats();
+        }
+
+        // Debounce rendering slightly during weight updates
+        let recomputeTimeout = null;
+        function recomputeChancesDebounced() {
+            if(recomputeTimeout) clearTimeout(recomputeTimeout);
+            recomputeTimeout = setTimeout(() => {
+                // Update grid calculations & statistics
+                renderNameGrid();
+            }, 50);
+        }
+
+        function toggleName(index) {
+            namePool[index].active = !namePool[index].active;
+            renderNameGrid();
+        }
+
+        function toggleAllNames(activeState) {
+            namePool.forEach(n => n.active = activeState);
+            renderNameGrid();
+        }
+
+        function resetAllWeights() {
+            namePool.forEach(n => n.weight = 1.0);
+            renderNameGrid();
+        }
+
+        function addNewName(event) {
+            event.preventDefault();
+            const input = document.getElementById('new-name-input');
+            const val = input.value.trim();
+            if(!val) return;
+
+            // Avoid duplicates
+            if (namePool.some(n => n.name.toLowerCase() === val.toLowerCase())) {
+                input.value = '';
+                return;
+            }
+
+            namePool.push({
+                name: val,
+                active: true,
+                count: 0,
+                weight: 1.0
+            });
+
+            input.value = '';
+            renderNameGrid();
+            updateStats();
+        }
+
+        // Web Audio Synthesizer sound effects
+        function playSfxTick(pitch = 440) {
+            if (!playSfx) return;
+            try {
+                const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(pitch, audioCtx.currentTime);
+                
+                gain.gain.setValueAtTime(0.08, audioCtx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.1);
+                
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc.start();
+                osc.stop(audioCtx.currentTime + 0.1);
+            } catch(e) {}
+        }
+
+        // Play Success chords
+        function playSfxSuccess() {
+            if (!playSfx) return;
+            try {
+                const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                
+                // Play chord notes (Arpeggio)
+                const playNote = (pitch, delay, duration) => {
+                    const osc = audioCtx.createOscillator();
+                    const gain = audioCtx.createGain();
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(pitch, audioCtx.currentTime + delay);
+                    gain.gain.setValueAtTime(0, audioCtx.currentTime + delay);
+                    gain.gain.linearRampToValueAtTime(0.12, audioCtx.currentTime + delay + 0.05);
+                    gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + delay + duration);
+                    osc.connect(gain);
+                    gain.connect(audioCtx.destination);
+                    osc.start(audioCtx.currentTime + delay);
+                    osc.stop(audioCtx.currentTime + delay + duration);
+                };
+
+                playNote(523.25, 0, 0.3);    // C5
+                playNote(659.25, 0.1, 0.3);  // E5
+                playNote(783.99, 0.2, 0.4);  // G5
+                playNote(1046.50, 0.3, 0.6); // C6
+            } catch(e) {}
+        }
+
+        function toggleSoundEffect() {
+            playSfx = !playSfx;
+            const toggleBtn = document.getElementById('sfx-toggle');
+            if (playSfx) {
+                toggleBtn.innerHTML = '<i class="fa-solid fa-volume-high text-emerald-400"></i>';
+                toggleBtn.title = "Toggle all sounds";
+            } else {
+                toggleBtn.innerHTML = '<i class="fa-solid fa-volume-xmark text-slate-500"></i>';
+                toggleBtn.title = "Toggle all sounds";
+            }
+        }
+
+        // Draw Sequence (Slot-machine style shuffling animation using weights)
+        function startDraw() {
+            if (isDrawing) return;
+            
+            const activePool = namePool.filter(n => n.active);
+            if (activePool.length === 0) {
+                const placeholder = document.getElementById('placeholder-text');
+                const nameDisplay = document.getElementById('display-name');
+                placeholder.textContent = "Error";
+                nameDisplay.textContent = " Roster is Empty ";
+                nameDisplay.classList.add('text-rose-400');
+                return;
+            }
+
+            isDrawing = true;
+            const drawBtn = document.getElementById('draw-btn');
+            drawBtn.disabled = true;
+            drawBtn.innerHTML = '<i class="fa-solid fa-circle-notch animate-spin mr-2"></i> Summoning...';
+            
+            const placeholder = document.getElementById('placeholder-text');
+            const nameDisplay = document.getElementById('display-name');
+            nameDisplay.classList.remove('text-rose-400');
+            placeholder.textContent = "Summoning based on weights...";
+
+            let shuffleCount = 15;
+            let shuffleSpeed = 60; // ms
+
+            function cycle() {
+                if (shuffleCount > 0) {
+                    // Random preview shuffle (ignores weights for visual randomness, but selects final via weights)
+                    const tempPick = activePool[Math.floor(Math.random() * activePool.length)];
+                    nameDisplay.textContent = tempPick.name;
+                    nameDisplay.style.transform = `scale(${0.9 + Math.random() * 0.15})`;
+                    
+                    // Progressive frequency pitch
+                    playSfxTick(200 + (15 - shuffleCount) * 40);
+                    
+                    shuffleCount--;
+                    shuffleSpeed += 20; // slow down sequentially
+                    setTimeout(cycle, shuffleSpeed);
+                } else {
+                    finalizeDraw(activePool);
+                }
+            }
+            cycle();
+        }
+
+        function finalizeDraw(activePool) {
+            // Choose winning random item using weighted probability logic
+            const winner = getWeightedRandom(activePool);
+            
+            // Increment draw counts
+            winner.count++;
+            currentDrawCount++;
+            
+            // Adjust visual stage
+            const nameDisplay = document.getElementById('display-name');
+            const placeholder = document.getElementById('placeholder-text');
+            nameDisplay.textContent = winner.name;
+            nameDisplay.style.transform = "scale(1.15)";
+            placeholder.textContent = "🍀 Summon Successful!";
+            
+            // Animate picked count text tag
+            const countTag = document.getElementById('picked-count-tag');
+            countTag.textContent = `Summoned ${winner.count} time${winner.count > 1 ? 's' : ''}`;
+            countTag.classList.remove('opacity-0');
+            countTag.classList.add('opacity-100');
+
+            // Trigger premium visuals and sound (respects playSfx toggle internally)
+            playSfxSuccess();
+            speakName(winner.name);
+            triggerConfetti();
+
+            // Store in history array
+            addHistoryRecord(winner.name);
+
+            // Re-enable interactive elements
+            isDrawing = false;
+            const drawBtn = document.getElementById('draw-btn');
+            drawBtn.disabled = false;
+            drawBtn.innerHTML = '<i class="fa-solid fa-bolt mr-2"></i> Summon &amp; Say Random Name';
+            document.getElementById('repeat-btn').disabled = false;
+
+            // Update dashboards
+            updateStats();
+            renderNameGrid();
+        }
+
+        function repeatPronunciation() {
+            const nameDisplay = document.getElementById('display-name').textContent;
+            if(nameDisplay && nameDisplay !== "Press Start") {
+                speakName(nameDisplay, true); // force manual replay even if general draw volume is muted
+            }
+        }
+
+        // CONFETTI LAUNCHER
+        function triggerConfetti() {
+            confetti({
+                particleCount: 80,
+                spread: 70,
+                origin: { y: 0.6 },
+                colors: ['#8b5cf6', '#d946ef', '#06b6d4', '#10b981']
+            });
+        }
+
+        // HISTORY SYSTEM
+        function addHistoryRecord(name) {
+            const timestamp = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+            history.unshift({ name, timestamp });
+
+            const container = document.getElementById('history-container');
+            const fallback = document.getElementById('no-history-fallback');
+            if(fallback) fallback.remove();
+
+            const row = document.createElement('div');
+            row.className = 'flex justify-between items-center p-3 rounded-xl bg-slate-900/60 border border-slate-800/80 hover:border-slate-700/60 transition';
+            row.innerHTML = `
+                <div class="flex items-center gap-2.5">
+                    <div class="w-6 h-6 rounded-full bg-violet-500/10 border border-violet-500/20 flex items-center justify-center text-[10px] text-violet-400">
+                        <i class="fa-solid fa-star"></i>
+                    </div>
+                    <span class="font-semibold text-sm text-slate-200">${name}</span>
+                </div>
+                <div class="flex items-center gap-2">
+                    <span class="text-[10px] text-slate-500 font-mono">${timestamp}</span>
+                    <button class="speak-history-btn w-6 h-6 rounded bg-slate-800 hover:bg-slate-700 text-[10px] text-slate-400 hover:text-white flex items-center justify-center transition" title="Speak name">
+                        <i class="fa-solid fa-volume-high"></i>
+                    </button>
+                </div>
+            `;
+
+            row.querySelector('.speak-history-btn').addEventListener('click', () => {
+                speakName(name, true); // explicit user feedback - force audio play
+            });
+
+            container.insertBefore(row, container.firstChild);
+        }
+
+        function clearHistory() {
+            history = [];
+            const container = document.getElementById('history-container');
+            container.innerHTML = `
+                <div id="no-history-fallback" class="text-center py-8 text-slate-500 text-xs">
+                    <i class="fa-solid fa-clock-rotate-left text-lg mb-2 block text-slate-600"></i>
+                    Waiting for the first summon...
+                </div>
+            `;
+            updateStats();
+        }
+
+        // STATISTICS GENERATOR
+        function updateStats() {
+            document.getElementById('stat-total-draws').textContent = currentDrawCount;
+            
+            const uniquePicked = namePool.filter(n => n.count > 0).length;
+            document.getElementById('stat-unique-draws').textContent = `${uniquePicked}/${namePool.length}`;
+
+            // Build High score board (Leaderboard)
+            const ranked = [...namePool].filter(n => n.count > 0).sort((a,b) => b.count - a.count).slice(0, 4);
+            const leaderboard = document.getElementById('leaderboard-list');
+            leaderboard.innerHTML = '';
+
+            if (ranked.length === 0) {
+                leaderboard.innerHTML = '<p class="text-xs text-slate-500 italic py-2">No draws completed yet.</p>';
+                return;
+            }
+
+            ranked.forEach((item, index) => {
+                const colorMap = ['text-amber-400', 'text-slate-300', 'text-amber-600', 'text-slate-500'];
+                const badgeColor = colorMap[index] || 'text-slate-500';
+                
+                const itemEl = document.createElement('div');
+                itemEl.className = 'flex justify-between items-center text-xs bg-slate-950/20 py-2 px-3 rounded-lg border border-slate-800/40';
+                itemEl.innerHTML = `
+                    <div class="flex items-center gap-2">
+                        <i class="fa-solid fa-trophy ${badgeColor}"></i>
+                        <span class="font-medium text-slate-300">${item.name}</span>
+                    </div>
+                    <span class="font-semibold bg-slate-900 px-2 py-0.5 rounded text-violet-400">${item.count} Draw${item.count > 1 ? 's' : ''}</span>
+                `;
+                leaderboard.appendChild(itemEl);
+            });
+        }
+
+
+        // TAB CONTROLLER
+        function switchTab(tabId) {
+            // Toggle view panels
+            document.getElementById('panel-picker').classList.add('hidden');
+            document.getElementById('panel-wheel').classList.add('hidden');
+            document.getElementById('panel-settings').classList.add('hidden');
+
+            document.getElementById(`panel-${tabId}`).classList.remove('hidden');
+
+            // Toggle tab UI highlights
+            const buttons = document.querySelectorAll('.tab-btn');
+            buttons.forEach(btn => {
+                btn.className = 'tab-btn px-4 py-2 rounded-lg font-medium text-slate-400 hover:text-white transition-all duration-200';
+            });
+
+            const activeBtn = document.getElementById(`tab-${tabId}`);
+            activeBtn.className = 'tab-btn px-4 py-2 rounded-lg font-medium transition-all duration-200 bg-violet-600 text-white shadow-sm shadow-violet-500/10';
+
+            if(tabId === 'wheel') {
+                setTimeout(resizeCanvas, 50); // Give canvas time to become visible
+            }
+        }
+
+        // SPIN WHEEL SYSTEM (Proportional Canvas rendering engine based on weights)
+        let wheelCanvas, ctx;
+        let startAngle = 0;
+        let spinTimeout = null;
+        let spinAngleStart = 10;
+        let spinTime = 0;
+        let spinTimeTotal = 0;
+
+        const colors = [
+            '#4f46e5', '#7c3aed', '#c084fc', '#0891b2', '#0d9488', 
+            '#059669', '#10b981', '#16a34a', '#db2777', '#c026d3',
+            '#2563eb', '#3b82f6', '#4f46e5', '#6366f1'
+        ];
+
+        function initWheel() {
+            wheelCanvas = document.getElementById('wheel-canvas');
+            if(!wheelCanvas) return;
+            ctx = wheelCanvas.getContext('2d');
+            resizeCanvas();
+            window.addEventListener('resize', resizeCanvas);
+        }
+
+        function resizeCanvas() {
+            if(!wheelCanvas || wheelCanvas.offsetParent === null) return;
+            drawWheel();
+        }
+
+        function drawWheel() {
+            if (!wheelCanvas || !ctx) return;
+            
+            const activePool = namePool.filter(n => n.active);
+            if(activePool.length === 0) {
+                ctx.clearRect(0,0, 400, 400);
+                ctx.fillStyle = '#fff';
+                ctx.font = 'bold 16px sans-serif';
+                ctx.textAlign = 'center';
+                ctx.fillText('Roster is empty', 200, 200);
+                return;
+            }
+
+            ctx.clearRect(0,0, 400, 400);
+            
+            const totalWeight = activePool.reduce((sum, item) => sum + item.weight, 0);
+            const radius = 180;
+            const centerX = 200;
+            const centerY = 200;
+
+            let runningAngle = startAngle;
+
+            for (let i = 0; i < activePool.length; i++) {
+                const item = activePool[i];
+                // Slice angle is directly proportional to its weight fraction of total weight
+                const sliceAngle = (item.weight / totalWeight) * (Math.PI * 2);
+
+                ctx.fillStyle = colors[i % colors.length];
+                ctx.beginPath();
+                ctx.arc(centerX, centerY, radius, runningAngle, runningAngle + sliceAngle, false);
+                ctx.lineTo(centerX, centerY);
+                ctx.fill();
+
+                // Draw Text labels centered on each custom-sized wedge
+                ctx.save();
+                ctx.fillStyle = "#ffffff";
+                ctx.font = 'bold 12px system-ui, sans-serif';
+                
+                const labelAngle = runningAngle + (sliceAngle / 2);
+                ctx.translate(centerX + Math.cos(labelAngle) * (radius - 55), centerY + Math.sin(labelAngle) * (radius - 55));
+                ctx.rotate(labelAngle + Math.PI);
+                ctx.textAlign = "center";
+                
+                // Truncate name label if slice is tiny or name is long
+                let label = item.name;
+                const percentage = (item.weight / totalWeight);
+                if (percentage < 0.04) {
+                    label = ""; // hide text on extremely narrow slices to prevent overlapping
+                } else if(label.length > 10 || percentage < 0.08) {
+                    label = label.slice(0, 6) + '..';
+                }
+                
+                ctx.fillText(label, 0, 0);
+                ctx.restore();
+
+                runningAngle += sliceAngle;
+            }
+
+            // Draw center pin
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, 30, 0, Math.PI * 2, false);
+            ctx.fillStyle = '#1e1b4b';
+            ctx.lineWidth = 4;
+            ctx.strokeStyle = '#ffffff';
+            ctx.fill();
+            ctx.stroke();
+
+            // Tiny center decoration
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, 10, 0, Math.PI * 2, false);
+            ctx.fillStyle = '#ffffff';
+            ctx.fill();
+        }
+
+        function spinWheel() {
+            const activePool = namePool.filter(n => n.active);
+            if (activePool.length === 0 || isSpinning) return;
+
+            isSpinning = true;
+            document.getElementById('spin-btn').disabled = true;
+
+            // Hide old result box as soon as a new spin begins
+            const resultBox = document.getElementById('wheel-result-box');
+            if (resultBox) {
+                resultBox.classList.add('hidden');
+            }
+
+            spinAngleStart = Math.random() * 10 + 10;
+            spinTime = 0;
+            spinTimeTotal = Math.random() * 3000 + 4000;
+            rotateWheel();
+        }
+
+        function rotateWheel() {
+            spinTime += 30;
+            if (spinTime >= spinTimeTotal) {
+                stopRotateWheel();
+                return;
+            }
+            const spinAngle = spinAngleStart - easeOut(spinTime, 0, spinAngleStart, spinTimeTotal);
+            startAngle += (spinAngle * Math.PI / 180);
+            
+            // Ticking sound effect on pass segment (respects playSfx toggle)
+            if(Math.floor(startAngle * 10) % 6 === 0) {
+                playSfxTick(350);
+            }
+
+            drawWheel();
+            spinTimeout = setTimeout(rotateWheel, 30);
+        }
+
+        function stopRotateWheel() {
+            clearTimeout(spinTimeout);
+            isSpinning = false;
+            document.getElementById('spin-btn').disabled = false;
+
+            const activePool = namePool.filter(n => n.active);
+            const totalWeight = activePool.reduce((sum, item) => sum + item.weight, 0);
+
+            // Compute the winning slice alignment.
+            // Pointer arrow is pointing down at 12 o'clock (angle: 1.5 * PI).
+            // Normalize current wheel state angle:
+            const pointerAngleWorld = 1.5 * Math.PI;
+            
+            // Determine targeted angle on the wheel:
+            let targetAngleOnWheel = (pointerAngleWorld - startAngle) % (Math.PI * 2);
+            if (targetAngleOnWheel < 0) {
+                targetAngleOnWheel += (Math.PI * 2);
+            }
+
+            // Match running angle segment range to locate winner
+            let runningSumAngle = 0;
+            let winner = activePool[activePool.length - 1]; // fallback
+
+            for (let i = 0; i < activePool.length; i++) {
+                const item = activePool[i];
+                const sliceAngle = (item.weight / totalWeight) * (Math.PI * 2);
+                
+                if (targetAngleOnWheel >= runningSumAngle && targetAngleOnWheel < runningSumAngle + sliceAngle) {
+                    winner = item;
+                    break;
+                }
+                runningSumAngle += sliceAngle;
+            }
+
+            // Setup winner details inside standard drawing structure
+            winner.count++;
+            currentDrawCount++;
+            
+            // Display & Pronounce (respects playSfx toggle internally)
+            speakName(winner.name);
+            triggerConfetti();
+            playSfxSuccess();
+            addHistoryRecord(winner.name);
+            updateStats();
+            renderNameGrid();
+
+            // Render winner directly in the Wheel tab container
+            const resultBox = document.getElementById('wheel-result-box');
+            const winnerNameText = document.getElementById('wheel-winner-name');
+            if (resultBox && winnerNameText) {
+                winnerNameText.textContent = winner.name;
+                resultBox.classList.remove('hidden');
+            }
+
+            // Keep main screen display sync updated
+            document.getElementById('display-name').textContent = winner.name;
+            document.getElementById('placeholder-text').textContent = "🎡 Wheel Lucky Match!";
+            const countTag = document.getElementById('picked-count-tag');
+            countTag.textContent = `Summoned ${winner.count} times`;
+            countTag.classList.remove('opacity-0');
+            countTag.classList.add('opacity-100');
+            document.getElementById('repeat-btn').disabled = false;
+        }
+
+        function easeOut(t, b, c, d) {
+            const ts = (t /= d) * t;
+            const tc = ts * t;
+            return b + c * (tc + -3 * ts + 3 * t);
+        }
+
+        // Event listener setups
+        document.getElementById('rate-range').addEventListener('input', (e) => {
+            document.getElementById('rate-val').textContent = e.target.value + 'x';
+        });
+        document.getElementById('pitch-range').addEventListener('input', (e) => {
+            document.getElementById('pitch-val').textContent = e.target.value;
+        });
+
+        // Start initialization on window load
+        window.addEventListener('DOMContentLoaded', initApp);
+    </script>
+</body>
+</html>
